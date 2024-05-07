@@ -1,6 +1,9 @@
 import * as THREE from "three";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
+
+const FBX_PATH = "./assets/low-poly-bear/source/Anim_LowPoly_Bear_Demo.fbx";
+const TEXTURE_PATH = "./assets/low-poly-bear/textures/PolyArt_Forest_color.png"
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -24,12 +27,12 @@ controls.update();
 
 const loader = new FBXLoader();
 loader.load(
-    "./assets/low-poly-bear/source/Anim_LowPoly_Bear_Demo.fbx",
+    FBX_PATH,
     (fbx) => {
         fbx.traverse((child) => {
             if (child.isMesh) {
                 const texture = new THREE.TextureLoader().load(
-                    "./assets/low-poly-bear/textures/PolyArt_Forest_color.png"
+                    TEXTURE_PATH
                 );
                 child.material.map = texture;
             }
