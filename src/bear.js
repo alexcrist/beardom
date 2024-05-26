@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const ANIMATION_DATA = {
     walkForward: {
@@ -14,22 +15,23 @@ export const initBear = async (scene) => {
             "./assets/LowPoly_Bears_pack_v01/texture/PolyArt_Forest_color.png"
         );
         const material = new THREE.MeshStandardMaterial({ map: texture });
-        const fbxLoader = new FBXLoader();
-        fbxLoader.load(
-            "./assets/LowPoly_Bears_pack_v01/LowPoly_Bear_IP.fbx",
-            (bear) => {
-                bear.traverse((child) => {
+        const loader = new GLTFLoader();
+        loader.load(
+            "./assets/LowPoly_Bears_pack_v01/LowPoly_Bear_IP.glb",
+            (gltf) => {
+                gltf.scene.traverse((child) => {
+                    console.log("child", child);
                     if (child.isMesh) {
                         child.material = material;
                     }
                 });
-                scene.add(bear);
+                scene.add(gltf.scene);
                 const animationActions = {};
-                const animationMixer = new THREE.AnimationMixer(bear);
+                const animationMixer = new THREE.AnimationMixer(gltf.scene);
                 for (const animationKey in ANIMATION_DATA) {
                     const { name } = ANIMATION_DATA[animationKey];
                     animationActions[animationKey] = createAnimationAction(
-                        bear,
+                        gltf,
                         animationMixer,
                         name
                     );
@@ -41,7 +43,7 @@ export const initBear = async (scene) => {
 };
 
 const createAnimationAction = (
-    bear,
+    gltf,
     animationMixer,
     animationName,
     animationOptions = {
@@ -51,15 +53,15 @@ const createAnimationAction = (
 ) => {
     console.info(
         "Bear animations",
-        bear.animations.map((animation) => animation.name).sort()
+        gltf.animations.map((animation) => animation.name).sort()
     );
-    const animation = bear.animations.find((animation) => {
+    const animation = gltf.animations.find((animation) => {
         return animation.name === animationName;
     });
     if (!animation) {
         throw Error(`Could not find animation: ${animationName}`);
     }
-    const action = animationMixer.clipAction(animation, bear);
+    const action = animationMixer.clipAction(animation, gltf.scene);
     action.setLoop(animationOptions.loop);
     action.clampWhenFinished = animationOptions.clampWhenFinished;
     return action;
