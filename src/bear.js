@@ -6,6 +6,18 @@ const ANIMATION_DATA = {
     walkForward: {
         name: "Arm_Bear|Walk_F_IP",
     },
+    jumpForward: {
+        name: "Arm_Bear|Jump_F_IP",
+    },
+    jumpPlace: {
+        name: "Arm_Bear|Jump_place",
+        options: {
+            loop: THREE.LoopOnce,
+        },
+    },
+    jumpRun: {
+        name: "Arm_Bear|Jump_run_IP",
+    },
 };
 
 export const initBear = async (scene) => {
@@ -20,7 +32,6 @@ export const initBear = async (scene) => {
             "./assets/LowPoly_Bears_pack_v01/LowPoly_Bear_IP.glb",
             (gltf) => {
                 gltf.scene.traverse((child) => {
-                    console.log("child", child);
                     if (child.isMesh) {
                         child.material = material;
                     }
@@ -29,11 +40,12 @@ export const initBear = async (scene) => {
                 const animationActions = {};
                 const animationMixer = new THREE.AnimationMixer(gltf.scene);
                 for (const animationKey in ANIMATION_DATA) {
-                    const { name } = ANIMATION_DATA[animationKey];
+                    const { name, options } = ANIMATION_DATA[animationKey];
                     animationActions[animationKey] = createAnimationAction(
                         gltf,
                         animationMixer,
-                        name
+                        name,
+                        options
                     );
                 }
                 resolve({ animationActions, animationMixer });
@@ -42,15 +54,21 @@ export const initBear = async (scene) => {
     });
 };
 
+const DEFAULT_ANIMATION_OPTIONS = {
+    loop: THREE.LoopRepeat,
+    clampWhenFinished: false,
+};
+
 const createAnimationAction = (
     gltf,
     animationMixer,
     animationName,
-    animationOptions = {
-        loop: THREE.LoopRepeat,
-        clampWhenFinished: false,
-    }
+    animationOptions = {}
 ) => {
+    for (const key in DEFAULT_ANIMATION_OPTIONS) {
+        animationOptions[key] =
+            animationOptions[key] ?? DEFAULT_ANIMATION_OPTIONS[key];
+    }
     console.info(
         "Bear animations",
         gltf.animations.map((animation) => animation.name).sort()
