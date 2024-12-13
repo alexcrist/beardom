@@ -15,7 +15,7 @@ export class Bear extends Creature {
         super();
         this.isPlayer = options.isPlayer ?? false;
         this.speed = 5;
-        this.jumpPower = 100;
+        this.jumpPower = 50;
     }
 
     async init(scene) {

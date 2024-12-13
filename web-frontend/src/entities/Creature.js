@@ -35,11 +35,18 @@ export class Creature {
     update(clockDeltaSeconds, ground, actions, camera) {
         // Handle player inputted actions
         if (this.isPlayer) {
+            const cameraDirection = new Vector3();
+            camera.getWorldDirection(cameraDirection);
+            const cameraAngle =
+                Math.atan2(cameraDirection.z, cameraDirection.x) - Math.PI / 2;
             for (const actionKey in actions) {
                 if (actionKey === ACTIONS.KeyW) {
                     if (this.isTouchingGround) {
-                        if (actions[actionKey] && !this.isMovingForward) {
-                            this.startMoveForward();
+                        if (actions[actionKey]) {
+                            this.setRotation(cameraAngle);
+                            if (!this.isMovingForward) {
+                                this.startMoveForward();
+                            }
                         } else if (
                             !actions[actionKey] &&
                             this.isMovingForward
@@ -108,6 +115,9 @@ export class Creature {
         this.position.y += dY;
         this.position.z += dZ;
 
+        // TODO: should check ground validity here (and adjust dX/dY/dZ) to avoid jerky
+        // camera upon ground impact post-jump
+
         // Transform mesh to match position
         this.mesh.position.set(
             this.position.x,
@@ -165,7 +175,6 @@ export class Creature {
 
     startMoveBack() {
         this.stopMoveForward();
-        this.setRotation(1.5);
         this.isMovingBack = true;
         this.velocity.y = -this.speed * BACKWARDS_SPEED;
     }
