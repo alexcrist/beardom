@@ -2,15 +2,23 @@ import * as THREE from "three";
 
 const ANIMATION_ACTIONS_METADATA = {
     moveForward: {
-        name: "Arm_Bear|Walk_F_IP",
+        name: "Arm_Bear|Run_F_IP",
+    },
+    moveLeft: {
+        name: "Arm_Bear|Turn_L_IP",
+    },
+    moveRight: {
+        name: "Arm_Bear|Turn_R_IP",
+    },
+    moveBack: {
+        name: "Arm_Bear|Walk_B_IP",
     },
     jump: {
-        name: "Arm_Bear|Jump_F_IP",
+        name: "Arm_Bear|Jump_place",
         options: {
             loop: THREE.LoopOnce,
         },
     },
-    // TODO: need other animations
 };
 
 export const initBearAnimations = (gltf) => {

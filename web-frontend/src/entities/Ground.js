@@ -15,7 +15,7 @@ export class Ground {
         this.mesh.receiveShadow = true;
     }
 
-    getGroundZ() {
+    getGroundY() {
         return 0;
     }
 }

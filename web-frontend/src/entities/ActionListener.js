@@ -26,10 +26,6 @@ export class ActionListener {
             }
         });
     }
-
-    getActions() {
-        return this.actions;
-    }
 }
 
 // export const initControls = (animationActions) => {

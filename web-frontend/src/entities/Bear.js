@@ -3,19 +3,21 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { initBearAnimations } from "../initBearAnimations";
 import { Creature } from "./Creature";
 
+const ANIMATION_TRANSITION_SECONDS = 0.1;
+const BEAR_OPTIONS = {
+    speed: 10,
+    jumpPower: 50,
+};
+
 export class Bear extends Creature {
-    animationMixer = null;
     animationMoveForward = null;
     animationMoveLeft = null;
     animationMoveRight = null;
     animationMoveBack = null;
     animationJump = null;
 
-    constructor(options = {}) {
-        super();
-        this.isPlayer = options.isPlayer ?? false;
-        this.speed = 5;
-        this.jumpPower = 50;
+    constructor(options) {
+        super(options, BEAR_OPTIONS);
     }
 
     async init(scene) {
@@ -39,56 +41,76 @@ export class Bear extends Creature {
                     const { animationMixer, animationActions } =
                         initBearAnimations(gltf);
                     this.animationMixer = animationMixer;
-                    this.animationActions = animationActions;
-                    // TODO: set individual animations
+                    this.animationMoveForward = animationActions.moveForward;
+                    this.animationMoveLeft = animationActions.moveLeft;
+                    this.animationMoveRight = animationActions.moveRight;
+                    this.animationMoveBack = animationActions.moveBack;
+                    this.animationJump = animationActions.jump;
                     resolve();
                 },
             );
         });
     }
 
-    update(clockDeltaSeconds, ground, actions, camera) {
-        super.update(clockDeltaSeconds, ground, actions, camera);
-        this.animationMixer.update(clockDeltaSeconds);
-    }
-
     startMoveForward() {
         super.startMoveForward();
-        // Point bear at camera
-        // Update velocity
+        this.animationMoveForward
+            .reset()
+            .fadeIn(ANIMATION_TRANSITION_SECONDS)
+            .play();
     }
 
     stopMoveForward() {
         super.stopMoveForward();
+        this.animationMoveForward.fadeOut(ANIMATION_TRANSITION_SECONDS);
     }
 
-    startMoveLeft() {
-        super.startMoveLeft();
+    startTurnLeft() {
+        super.startTurnLeft();
+        this.animationMoveLeft
+            .reset()
+            .fadeIn(ANIMATION_TRANSITION_SECONDS)
+            .play();
     }
 
-    stopMoveLeft() {
-        super.stopMoveLeft();
+    stopTurnLeft() {
+        super.stopTurnLeft();
+        this.animationMoveLeft.fadeOut(ANIMATION_TRANSITION_SECONDS);
     }
 
-    startMoveRight() {
-        super.startMoveRight();
+    startTurnRight() {
+        super.startTurnRight();
+        this.animationMoveRight
+            .reset()
+            .fadeIn(ANIMATION_TRANSITION_SECONDS)
+            .play();
     }
 
-    stopMoveRight() {
-        super.stopMoveRight();
+    stopTurnRight() {
+        super.stopTurnRight();
+        this.animationMoveRight.fadeOut(ANIMATION_TRANSITION_SECONDS);
     }
 
     startMoveBack() {
         super.startMoveBack();
+        this.animationMoveBack
+            .reset()
+            .fadeIn(ANIMATION_TRANSITION_SECONDS)
+            .play();
     }
 
     stopMoveBack() {
         super.stopMoveBack();
+        this.animationMoveBack.fadeOut(ANIMATION_TRANSITION_SECONDS);
     }
 
     jump() {
         super.jump();
-        // Update velocity
-        // Start animation
+        this.animationJump.reset().fadeIn(ANIMATION_TRANSITION_SECONDS).play();
+        this.animationJump.time = 0.35;
+        setTimeout(
+            () => this.animationJump.fadeOut(ANIMATION_TRANSITION_SECONDS),
+            7000,
+        );
     }
 }
