@@ -21,14 +21,11 @@ export class World {
             canvas: document.getElementById("canvas"),
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setClearColor("#90CCE6", 1);
 
         const light1 = new THREE.DirectionalLight(0xffffff, 1);
         light1.position.set(1, 1, 1);
         this.scene.add(light1);
-
-        const light2 = new THREE.DirectionalLight(0xffffff, 0.5);
-        light2.position.set(-1, 1, 0);
-        this.scene.add(light2);
 
         this.scene.add(new THREE.AmbientLight(0xffffff, 1));
 
@@ -43,6 +40,8 @@ export class World {
         this.camera = new Camera(this.player);
 
         this.creatures = [this.player];
+
+        window.addEventListener("resize", this.onWindowResize.bind(this));
     }
 
     async init() {
@@ -50,6 +49,13 @@ export class World {
             await this.creatures[i].init(this.scene);
         }
         this.camera.init();
+    }
+
+    onWindowResize() {
+        this.camera.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
     }
 
     update() {

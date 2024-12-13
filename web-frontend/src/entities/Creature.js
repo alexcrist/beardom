@@ -132,8 +132,18 @@ export class Creature {
         this.position.y += this.velocity.y * clockDeltaSeconds;
         this.position.z += velocityZ * clockDeltaSeconds;
 
+        // If not falling or jumping and creature is very close to ground but above
+        // ground (i.e.: walking down hill), snap creature to ground
+        const groundY = ground.getGroundY(this.position.x, this.position.z);
+        if (
+            this.position.y > groundY &&
+            this.position.y - groundY < 0.2 &&
+            this.velocity.y === 0
+        ) {
+            this.position.y = groundY;
+        }
+
         // If not touching ground, fall
-        const groundY = ground.getGroundY(this.position);
         if (this.position.y > groundY) {
             this.velocity.y -= GRAVITY_METERS_PER_SECOND_SQUARED;
             if (this.velocity.y < -TERMINAL_VELOCITY_METERS_PER_SECOND) {

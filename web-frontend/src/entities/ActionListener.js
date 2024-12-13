@@ -27,28 +27,3 @@ export class ActionListener {
         });
     }
 }
-
-// export const initControls = (animationActions) => {
-//     const { walkForward, jumpForward } = animationActions;
-
-//     document.addEventListener("keydown", (event) => {
-//         if (event.code === "KeyW") {
-//             if (!walkForward.isRunning()) {
-//                 walkForward.reset().fadeIn(0.1).play();
-//             }
-//         }
-
-//         if (event.code === "Space") {
-//             // TODO: only allow jump if on the ground
-//             walkForward.fadeOut(0.1);
-//             jumpForward.reset().fadeIn(0.1).play();
-//             jumpForward.time = 0.5;
-//         }
-//     });
-
-//     document.addEventListener("keyup", (event) => {
-//         if (event.code === "KeyW") {
-//             walkForward.fadeOut(0.1);
-//         }
-//     });
-// };
