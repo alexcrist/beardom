@@ -1,5 +1,5 @@
 {
-    "name": "bearcraft",
+    "name": "beardom",
     "type": "module",
     "scripts": {
         "dev": "vite --open --host",
