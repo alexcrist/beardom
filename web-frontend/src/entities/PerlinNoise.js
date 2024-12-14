@@ -37,10 +37,13 @@ export class PerlinNoise {
         const positions = new Float32Array(
             (this.xSize + 1) * (this.zSize + 1) * 3,
         );
+        const uvs = new Float32Array((this.xSize + 1) * (this.zSize + 1) * 2);
+
         const indices = [];
 
-        // Generate vertices
+        // Generate vertices (and UVs)
         let index = 0;
+        let uvIndex = 0;
         for (let x = 0; x <= this.xSize; x++) {
             for (let z = 0; z <= this.zSize; z++) {
                 const elevation = this.elevations[x][z];
@@ -50,6 +53,10 @@ export class PerlinNoise {
                 index++;
                 positions[index] = z;
                 index++;
+                uvs[uvIndex] = x / this.xSize;
+                uvIndex++;
+                uvs[uvIndex] = z / this.zSize;
+                uvIndex++;
             }
         }
 
@@ -68,7 +75,9 @@ export class PerlinNoise {
         // Create the buffer geometry
         const geometry = new BufferGeometry();
         geometry.setAttribute("position", new BufferAttribute(positions, 3));
+        geometry.setAttribute("uv", new BufferAttribute(uvs, 2));
         geometry.setIndex(indices);
+
         geometry.computeVertexNormals();
 
         return geometry;

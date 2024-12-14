@@ -6,7 +6,7 @@ export class Camera {
     camera = null;
     cameraDirection = new Vector3();
 
-    constructor(player) {
+    constructor({ player, position }) {
         this.player = player;
         this.camera = new PerspectiveCamera(
             75,
@@ -14,12 +14,10 @@ export class Camera {
             0.1,
             1000,
         );
-        this.camera.position.x = 4;
-        this.camera.position.z = -5;
-        this.camera.position.y = 3;
+        this.camera.position.copy(position);
     }
 
-    init() {
+    update() {
         this.lookAtPlayer();
     }
 
@@ -40,7 +38,6 @@ export class Camera {
         const newX = vector3.x + radius * Math.cos(newAngleRad);
         const newZ = vector3.z + radius * Math.sin(newAngleRad);
         this.camera.position.set(newX, this.camera.position.y, newZ);
-        this.lookAtPlayer();
     }
 
     getCameraDirection() {

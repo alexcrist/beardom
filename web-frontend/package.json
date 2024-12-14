@@ -12,6 +12,7 @@
     "dependencies": {
         "alea": "^1.0.1",
         "simplex-noise": "^4.0.3",
+        "stats.js": "^0.17.0",
         "three": "^0.164.1"
     }
 }

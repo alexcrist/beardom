@@ -6,7 +6,7 @@ import { Creature } from "./Creature";
 const ANIMATION_TRANSITION_SECONDS = 0.1;
 const BEAR_OPTIONS = {
     speed: 10,
-    jumpPower: 50,
+    jumpPower: 30,
 };
 
 export class Bear extends Creature {
@@ -20,7 +20,7 @@ export class Bear extends Creature {
         super(options, BEAR_OPTIONS);
     }
 
-    async init(scene) {
+    async initMesh() {
         await new Promise((resolve) => {
             const textureLoader = new THREE.TextureLoader();
             const texture = textureLoader.load(
@@ -36,7 +36,6 @@ export class Bear extends Creature {
                             child.material = material;
                         }
                     });
-                    scene.add(gltf.scene);
                     this.mesh = gltf.scene;
                     const { animationMixer, animationActions } =
                         initBearAnimations(gltf);
@@ -108,9 +107,5 @@ export class Bear extends Creature {
         super.jump();
         this.animationJump.reset().fadeIn(ANIMATION_TRANSITION_SECONDS).play();
         this.animationJump.time = 0.35;
-        setTimeout(
-            () => this.animationJump.fadeOut(ANIMATION_TRANSITION_SECONDS),
-            7000,
-        );
     }
 }

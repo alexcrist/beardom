@@ -1,18 +1,16 @@
 import { Matrix3, Vector3 } from "three";
-import {
-    GRAVITY_METERS_PER_SECOND_SQUARED,
-    TERMINAL_VELOCITY_METERS_PER_SECOND,
-} from "../constants";
+import { GRAVITY_ACCELERATION, TERMINAL_VELOCITY } from "../constants";
 import { ACTIONS } from "./ActionListener";
 
 const BACKWARDS_SPEED = 0.75;
-const CREATURE_OPTIONS = {
+const CREATURE_OPTIONS = () => ({
     speed: 1,
     turnSpeed: 2,
     jumpPower: 10,
     isPlayer: false,
     position: new Vector3(0, 0, 0),
-};
+    rotationAngleRad: 1,
+});
 
 export class Creature {
     position = new Vector3(0, 0, 0); // World frame
@@ -41,16 +39,31 @@ export class Creature {
         if (new.target === Creature) {
             throw Error("Cannot instantiate abstract class.");
         }
+        const creatureOptions = CREATURE_OPTIONS();
         const getOption = (key) =>
-            options?.[key] ?? defaultOptions?.[key] ?? CREATURE_OPTIONS[key];
-        for (const key in CREATURE_OPTIONS) {
+            options?.[key] ?? defaultOptions?.[key] ?? creatureOptions[key];
+        for (const key in creatureOptions) {
             this[key] = getOption(key);
         }
     }
 
+    async initMesh() {
+        throw Error(
+            "Implement initMesh in child class (cannot instantiate Creature (abstract class)).",
+        );
+    }
+
+    async init(scene) {
+        await this.initMesh();
+        scene.add(this.mesh);
+        this.setRotation(this.rotationAngleRad);
+    }
+
     update(clockDeltaSeconds, actions, ground, camera) {
         // Update animation mixer time
-        this.animationMixer.update(clockDeltaSeconds);
+        if (this.animationMixer) {
+            this.animationMixer.update(clockDeltaSeconds);
+        }
 
         // Handle player inputted actions
         if (this.isPlayer) {
@@ -145,9 +158,9 @@ export class Creature {
 
         // If not touching ground, fall
         if (this.position.y > groundY) {
-            this.velocity.y -= GRAVITY_METERS_PER_SECOND_SQUARED;
-            if (this.velocity.y < -TERMINAL_VELOCITY_METERS_PER_SECOND) {
-                this.velocity.y = -TERMINAL_VELOCITY_METERS_PER_SECOND;
+            this.velocity.y -= GRAVITY_ACCELERATION * clockDeltaSeconds;
+            if (this.velocity.y < -TERMINAL_VELOCITY) {
+                this.velocity.y = -TERMINAL_VELOCITY;
             }
         }
 

@@ -1,5 +1,5 @@
-export const TERMINAL_VELOCITY_METERS_PER_SECOND = 54;
-export const GRAVITY_METERS_PER_SECOND_SQUARED = 2;
+export const TERMINAL_VELOCITY = 54;
+export const GRAVITY_ACCELERATION = 100;
 
 // TODO: add some trees
 // TODO: add mouse control
