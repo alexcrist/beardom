@@ -1,12 +1,15 @@
 {
     "name": "beardom",
+    "homepage": "https://alexcrist.github.io/beardom/",
     "type": "module",
     "scripts": {
         "dev": "vite --open --host",
         "build": "vite build",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "deploy": "vite build && gh-pages -d src/dist"
     },
     "devDependencies": {
+        "gh-pages": "^6.2.0",
         "vite": "^5.2.0"
     },
     "dependencies": {
