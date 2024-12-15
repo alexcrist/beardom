@@ -14,7 +14,7 @@ const ground = new Ground({
     xSize: X_SIZE,
     zSize: Z_SIZE,
     textureScale: 1,
-    texturePath: "../assets/grassloop.png",
+    texturePath: new URL("../assets/grassloop.png", import.meta.url).href,
     perlinNoiseSeed: "lucy",
 });
 

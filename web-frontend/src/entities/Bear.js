@@ -29,12 +29,18 @@ export class Bear extends Creature {
         await new Promise((resolve) => {
             const textureLoader = new THREE.TextureLoader();
             const texture = textureLoader.load(
-                "./assets/LowPoly_Bears_pack_v01/texture/PolyArt_Forest_color.png",
+                new URL(
+                    "../assets/LowPoly_Bears_pack_v01/texture/PolyArt_Forest_color.png",
+                    import.meta.url,
+                ).href,
             );
             const material = new THREE.MeshStandardMaterial({ map: texture });
             const loader = new GLTFLoader();
             loader.load(
-                "./assets/LowPoly_Bears_pack_v01/LowPoly_Bear_IP.glb",
+                new URL(
+                    "../assets/LowPoly_Bears_pack_v01/LowPoly_Bear_IP.glb",
+                    import.meta.url,
+                ).href,
                 (gltf) => {
                     gltf.scene.traverse((child) => {
                         if (child.isMesh) {
