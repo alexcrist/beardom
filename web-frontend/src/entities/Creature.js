@@ -13,6 +13,8 @@ const CREATURE_OPTIONS = () => ({
 });
 
 export class Creature {
+    isInitialized = false;
+
     position = new Vector3(0, 0, 0); // World frame
     velocity = new Vector3(0, 0, 0); // Local frame
 
@@ -57,6 +59,68 @@ export class Creature {
         await this.initMesh();
         scene.add(this.mesh);
         this.setRotation(this.rotationAngleRad);
+        this.isInitialized = true;
+    }
+
+    handleActions(actions, camera) {
+        if (actions === null) {
+            return;
+        }
+        const cameraAngle = camera?.getCameraAngle();
+        for (const actionKey in actions) {
+            const isActionActive = actions[actionKey];
+            if (actionKey === ACTIONS.KeyW) {
+                if (isActionActive) {
+                    if (this.isPlayer) {
+                        this.setRotation(cameraAngle);
+                    }
+                    if (!this.isMovingForward) {
+                        this.startMoveForward();
+                    }
+                } else {
+                    if (this.isMovingForward) {
+                        this.stopMoveForward();
+                    }
+                }
+            } else if (actionKey === ACTIONS.KeyA) {
+                if (isActionActive) {
+                    if (!this.isTurningLeft) {
+                        this.startTurnLeft();
+                    }
+                } else {
+                    if (this.isTurningLeft) {
+                        this.stopTurnLeft();
+                    }
+                }
+            } else if (actionKey === ACTIONS.KeyS) {
+                if (isActionActive) {
+                    if (this.isPlayer) {
+                        this.setRotation(cameraAngle);
+                    }
+                    if (!this.isMovingBack) {
+                        this.startMoveBack();
+                    }
+                } else {
+                    if (this.isMovingBack) {
+                        this.stopMoveBack();
+                    }
+                }
+            } else if (actionKey === ACTIONS.KeyD) {
+                if (isActionActive) {
+                    if (!this.isTurningRight) {
+                        this.startTurnRight();
+                    }
+                } else {
+                    if (this.isTurningRight) {
+                        this.stopTurnRight();
+                    }
+                }
+            } else if (actionKey === ACTIONS.Space) {
+                if (isActionActive && this.isTouchingGround) {
+                    this.jump();
+                }
+            }
+        }
     }
 
     update(clockDeltaSeconds, actions, ground, camera) {
@@ -66,59 +130,7 @@ export class Creature {
         }
 
         // Handle player inputted actions
-        if (this.isPlayer) {
-            const cameraAngle = camera.getCameraAngle();
-            for (const actionKey in actions) {
-                const isActionActive = actions[actionKey];
-                if (actionKey === ACTIONS.KeyW) {
-                    if (isActionActive) {
-                        this.setRotation(cameraAngle);
-                        if (!this.isMovingForward) {
-                            this.startMoveForward();
-                        }
-                    } else {
-                        if (this.isMovingForward) {
-                            this.stopMoveForward();
-                        }
-                    }
-                } else if (actionKey === ACTIONS.KeyA) {
-                    if (isActionActive) {
-                        if (!this.isTurningLeft) {
-                            this.startTurnLeft();
-                        }
-                    } else {
-                        if (this.isTurningLeft) {
-                            this.stopTurnLeft();
-                        }
-                    }
-                } else if (actionKey === ACTIONS.KeyS) {
-                    if (isActionActive) {
-                        this.setRotation(cameraAngle);
-                        if (!this.isMovingBack) {
-                            this.startMoveBack();
-                        }
-                    } else {
-                        if (this.isMovingBack) {
-                            this.stopMoveBack();
-                        }
-                    }
-                } else if (actionKey === ACTIONS.KeyD) {
-                    if (isActionActive) {
-                        if (!this.isTurningRight) {
-                            this.startTurnRight();
-                        }
-                    } else {
-                        if (this.isTurningRight) {
-                            this.stopTurnRight();
-                        }
-                    }
-                } else if (actionKey === ACTIONS.Space) {
-                    if (isActionActive && this.isTouchingGround) {
-                        this.jump();
-                    }
-                }
-            }
-        }
+        this.handleActions(actions, camera);
 
         // Turn bear (and camera)
         let rotationRad = 0;
@@ -130,7 +142,9 @@ export class Creature {
         }
         if (rotationRad !== 0) {
             this.addRotation(rotationRad);
-            camera.rotateAboutPoint(this.position, rotationRad);
+            if (this.isPlayer) {
+                camera.rotateAboutPoint(this.position, rotationRad);
+            }
         }
 
         // Update position (with velocity)

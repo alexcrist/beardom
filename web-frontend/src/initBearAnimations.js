@@ -19,13 +19,25 @@ const ANIMATION_ACTIONS_METADATA = {
             loop: THREE.LoopOnce,
         },
     },
+    attack1: {
+        name: "Arm_Bear|Attack_Stand_L",
+        options: {
+            loop: THREE.LoopOnce,
+        },
+    },
+    attack2: {
+        name: "Arm_Bear|Attack_Stand_R",
+        options: {
+            loop: THREE.LoopOnce,
+        },
+    },
 };
 
 export const initBearAnimations = (gltf) => {
-    console.info(
-        "Bear animations",
-        gltf.animations.map((animation) => animation.name).sort(),
-    );
+    // console.info(
+    //     "Bear animations",
+    //     gltf.animations.map((animation) => animation.name).sort(),
+    // );
     const animationActions = {};
     const animationMixer = new THREE.AnimationMixer(gltf.scene);
     for (const animationKey in ANIMATION_ACTIONS_METADATA) {

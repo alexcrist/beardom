@@ -2,6 +2,7 @@ import Stats from "stats.js";
 import * as THREE from "three";
 import { LEVEL_1 } from "../levels/level1";
 import { ActionListener } from "./ActionListener";
+import { PeerConnector } from "./PeerConnector";
 
 export class World {
     scene = null;
@@ -36,6 +37,8 @@ export class World {
         this.scene.add(this.ground.mesh);
         this.lights.forEach((light) => this.scene.add(light));
 
+        this.peerConnector = new PeerConnector(this.scene, this.player);
+
         window.addEventListener("resize", this.onWindowResize.bind(this));
 
         this.stats = new Stats();
@@ -60,14 +63,21 @@ export class World {
         this.stats.begin();
         const actions = this.actionListener.actions;
         const clockDeltaSeconds = this.clock.getDelta();
-        for (let i = 0; i < this.creatures.length; i++) {
-            this.creatures[i].update(
+        const allCreatures = this.creatures.concat(
+            this.peerConnector.getCreatures(),
+        );
+        for (let i = 0; i < allCreatures.length; i++) {
+            const actionsForCreature = allCreatures[i].isPlayer
+                ? actions
+                : null;
+            allCreatures[i].update(
                 clockDeltaSeconds,
-                actions,
+                actionsForCreature,
                 this.ground,
                 this.camera,
             );
         }
+        this.peerConnector.update(actions);
         this.camera.update();
         this.renderer.render(this.scene, this.camera.camera);
         this.stats.end();
