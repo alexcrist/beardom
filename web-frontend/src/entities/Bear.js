@@ -4,10 +4,12 @@ import { initBearAnimations } from "../initBearAnimations";
 import { ACTIONS } from "./ActionListener";
 import { Creature } from "./Creature";
 
-const ANIMATION_TRANSITION_SECONDS = 0.1;
+const ANIMATION_TRANSITION_SECONDS = 0.2;
 const BEAR_OPTIONS = {
     speed: 10,
+    turnSpeed: 2,
     jumpPower: 30,
+    height: 1.8,
 };
 
 export class Bear extends Creature {
@@ -18,11 +20,15 @@ export class Bear extends Creature {
     animationJump = null;
     animationAttack1 = null;
     animationAttack2 = null;
-    isAttacking = false;
     attackIndex = 0;
 
     constructor(options) {
         super(options, BEAR_OPTIONS);
+        if (this.isPlayer) {
+            setInterval(() => {
+                console.log("this.position", this.position);
+            }, 1000);
+        }
     }
 
     async initMesh() {
@@ -42,6 +48,14 @@ export class Bear extends Creature {
                     import.meta.url,
                 ).href,
                 (gltf) => {
+                    if (this.isPlayer) {
+                        console.info(
+                            "Bear animations",
+                            gltf.animations
+                                .map((animation) => animation.name)
+                                .sort(),
+                        );
+                    }
                     gltf.scene.traverse((child) => {
                         if (child.isMesh) {
                             child.material = material;
@@ -50,14 +64,27 @@ export class Bear extends Creature {
                     this.mesh = gltf.scene;
                     const { animationMixer, animationActions } =
                         initBearAnimations(gltf);
+                    Object.values(animationActions).forEach(
+                        (action) => (action.isStopped = true),
+                    );
                     this.animationMixer = animationMixer;
                     this.animationMoveForward = animationActions.moveForward;
+                    this.animationMoveForwardSlow =
+                        animationActions.moveForwardSlow;
                     this.animationMoveLeft = animationActions.moveLeft;
                     this.animationMoveRight = animationActions.moveRight;
                     this.animationMoveBack = animationActions.moveBack;
                     this.animationJump = animationActions.jump;
                     this.animationAttack1 = animationActions.attack1;
                     this.animationAttack2 = animationActions.attack2;
+                    this.animationAttack3 = animationActions.attack3;
+                    this.animationAttack4 = animationActions.attack4;
+                    this.animationFallLow = animationActions.fallLow;
+                    this.animationFallHigh = animationActions.fallHigh;
+                    this.animationIdle1 = animationActions.idle1;
+                    this.animationIdle2 = animationActions.idle2;
+                    this.animationIdle3 = animationActions.idle3;
+                    this.animationIdle4 = animationActions.idle4;
                     resolve();
                 },
             );
@@ -74,79 +101,194 @@ export class Bear extends Creature {
         }
     }
 
-    startMoveForward() {
-        super.startMoveForward();
-        this.animationMoveForward
-            .reset()
-            .fadeIn(ANIMATION_TRANSITION_SECONDS)
-            .play();
-    }
-
-    stopMoveForward() {
-        super.stopMoveForward();
-        this.animationMoveForward.fadeOut(ANIMATION_TRANSITION_SECONDS);
-    }
-
-    startTurnLeft() {
-        super.startTurnLeft();
-        this.animationMoveLeft
-            .reset()
-            .fadeIn(ANIMATION_TRANSITION_SECONDS)
-            .play();
-    }
-
-    stopTurnLeft() {
-        super.stopTurnLeft();
-        this.animationMoveLeft.fadeOut(ANIMATION_TRANSITION_SECONDS);
-    }
-
-    startTurnRight() {
-        super.startTurnRight();
-        this.animationMoveRight
-            .reset()
-            .fadeIn(ANIMATION_TRANSITION_SECONDS)
-            .play();
-    }
-
-    stopTurnRight() {
-        super.stopTurnRight();
-        this.animationMoveRight.fadeOut(ANIMATION_TRANSITION_SECONDS);
-    }
-
-    startMoveBack() {
-        super.startMoveBack();
-        this.animationMoveBack
-            .reset()
-            .fadeIn(ANIMATION_TRANSITION_SECONDS)
-            .play();
-    }
-
-    stopMoveBack() {
-        super.stopMoveBack();
-        this.animationMoveBack.fadeOut(ANIMATION_TRANSITION_SECONDS);
-    }
-
     jump() {
         super.jump();
-        this.animationJump.reset().fadeIn(ANIMATION_TRANSITION_SECONDS).play();
-        this.animationJump.weight = 5;
-        this.animationJump.time = 0.35;
+        this.animateJump();
     }
 
     attack() {
         if (!this.isAttacking) {
             this.isAttacking = true;
-            const animationAttack =
-                this.attackIndex % 2 === 0
-                    ? this.animationAttack1
-                    : this.animationAttack2;
             this.attackIndex++;
-            animationAttack.reset().fadeIn(ANIMATION_TRANSITION_SECONDS).play();
-            animationAttack.weight = 10;
-            setTimeout(() => {
-                animationAttack.fadeOut(0.5);
-                this.isAttacking = false;
-            }, 450);
+            this.animateAttack();
         }
+    }
+
+    updateAnimations() {
+        // Move forward
+        if (this.isMovingForward && !this.isInWater) {
+            this.animateMoveForward();
+        } else {
+            this.stopAnimateMoveForward();
+        }
+
+        // Move backward
+        if (this.isMovingBack && !this.isInWater) {
+            this.animateMoveBack();
+        } else {
+            this.stopAnimateMoveBack();
+        }
+
+        // Swim
+        if (this.isInWater) {
+            this.animateSwimForward();
+        } else {
+            this.stopAnimateSwimForward();
+        }
+
+        // Turn left
+        if (this.isTurningLeft) {
+            this.animateTurnLeft();
+        } else {
+            this.stopAnimateTurnLeft();
+        }
+
+        // Turn right
+        if (this.isTurningRight) {
+            this.animateTurnRight();
+        } else {
+            this.stopAnimateTurnRight();
+        }
+    }
+
+    animateMoveForward() {
+        if (this.animationMoveForward.isStopped) {
+            this.animationMoveForward.isStopped = false;
+            this.animationMoveForward
+                .reset()
+                .fadeIn(ANIMATION_TRANSITION_SECONDS)
+                .play();
+        }
+    }
+
+    stopAnimateMoveForward() {
+        if (!this.animationMoveForward.isStopped) {
+            this.animationMoveForward.isStopped = true;
+            this.animationMoveForward.fadeOut(ANIMATION_TRANSITION_SECONDS);
+        }
+    }
+
+    animateSwimForward() {
+        if (this.animationMoveForwardSlow.isStopped) {
+            this.animationMoveForwardSlow.isStopped = false;
+            this.animationMoveForwardSlow
+                .reset()
+                .fadeIn(ANIMATION_TRANSITION_SECONDS)
+                .play();
+        }
+    }
+
+    stopAnimateSwimForward() {
+        if (!this.animationMoveForwardSlow.isStopped) {
+            this.animationMoveForwardSlow.isStopped = true;
+            this.animationMoveForwardSlow.fadeOut(ANIMATION_TRANSITION_SECONDS);
+        }
+    }
+
+    animateSwimBack() {}
+
+    stopAnimateSwimBack() {
+        // TODO
+    }
+
+    animateTurnLeft() {
+        if (this.animationMoveLeft.isStopped) {
+            this.animationMoveLeft.isStopped = false;
+            this.animationMoveLeft
+                .reset()
+                .fadeIn(ANIMATION_TRANSITION_SECONDS)
+                .play();
+        }
+    }
+
+    stopAnimateTurnLeft() {
+        if (!this.animationMoveLeft.isStopped) {
+            this.animationMoveLeft.isStopped = true;
+            this.animationMoveLeft.fadeOut(ANIMATION_TRANSITION_SECONDS);
+        }
+    }
+
+    animateTurnRight() {
+        if (this.animationMoveRight.isStopped) {
+            this.animationMoveRight.isStopped = false;
+            this.animationMoveRight
+                .reset()
+                .fadeIn(ANIMATION_TRANSITION_SECONDS)
+                .play();
+        }
+    }
+
+    stopAnimateTurnRight() {
+        if (!this.animationMoveRight.isStopped) {
+            this.animationMoveRight.isStopped = true;
+            this.animationMoveRight.fadeOut(ANIMATION_TRANSITION_SECONDS);
+        }
+    }
+
+    animateMoveBack() {
+        if (this.animationMoveBack.isStopped) {
+            this.animationMoveBack.isStopped = false;
+            this.animationMoveBack
+                .reset()
+                .fadeIn(ANIMATION_TRANSITION_SECONDS)
+                .play();
+        }
+    }
+
+    stopAnimateMoveBack() {
+        if (!this.animationMoveBack.isStopped) {
+            this.animationMoveBack.isStopped = true;
+            this.animationMoveBack.fadeOut(ANIMATION_TRANSITION_SECONDS);
+        }
+    }
+
+    animateJump() {
+        this.animationJump.reset().fadeIn(ANIMATION_TRANSITION_SECONDS).play();
+        this.animationJump.weight = 5;
+        this.animationJump.time = 0.35;
+    }
+
+    animateAttack() {
+        let animations = [];
+        let animationTimes = [];
+        let animationWeights = [];
+        if (this.isInWater) {
+            if (this.attackIndex % 2 === 0) {
+                animations.push(this.animationAttack3);
+                animationTimes.push(0);
+                animationWeights.push(4);
+                animations.push(this.animationAttack2);
+                animationTimes.push(0);
+                animationWeights.push(6);
+            } else {
+                animations.push(this.animationAttack4);
+                animationTimes.push(0);
+                animationWeights.push(4);
+                animations.push(this.animationAttack1);
+                animationTimes.push(0);
+                animationWeights.push(6);
+            }
+        } else {
+            if (this.attackIndex % 2 === 0) {
+                animations.push(this.animationAttack1);
+                animationTimes.push(0);
+                animationWeights.push(10);
+            } else {
+                animations.push(this.animationAttack2);
+                animationTimes.push(0);
+                animationWeights.push(10);
+            }
+        }
+        for (let i = 0; i < animations.length; i++) {
+            animations[i].reset().fadeIn(ANIMATION_TRANSITION_SECONDS).play();
+            animations[i].time = animationTimes[i];
+            animations[i].weight = animationWeights[i];
+        }
+        setTimeout(() => {
+            for (let i = 0; i < animations.length; i++) {
+                animations[i].fadeOut(0.5);
+            }
+            this.isAttacking = false;
+        }, 450);
     }
 }

@@ -9,6 +9,7 @@ const TREE_OPTIONS = {
 export class Tree extends Creature {
     constructor(options) {
         super(options, TREE_OPTIONS);
+        this.isTree = true;
     }
 
     async initMesh() {
@@ -28,5 +29,12 @@ export class Tree extends Creature {
                 },
             );
         });
+    }
+
+    update(clockDeltaSeconds, actions, ground, waters, camera) {
+        super.update(clockDeltaSeconds, actions, ground, waters, camera);
+        if (this.isInWater) {
+            this.destroy();
+        }
     }
 }

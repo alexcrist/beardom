@@ -1,12 +1,20 @@
 import { Matrix3, Vector3 } from "three";
-import { GRAVITY_ACCELERATION, TERMINAL_VELOCITY } from "../constants";
+import {
+    GRAVITY_ACCEL,
+    TERMINAL_VELOCITY,
+    WATER_FLOAT_ACCEL,
+} from "../constants";
 import { ACTIONS } from "./ActionListener";
 
 const BACKWARDS_SPEED = 0.75;
+const SWIMMING_SPEED = 0.5;
+const ATTACKING_SPEED = 0.5;
+const JUMP_POWER_WHILE_ATTACKING = 0.8;
 const CREATURE_OPTIONS = () => ({
     speed: 1,
     turnSpeed: 2,
     jumpPower: 10,
+    height: 1,
     isPlayer: false,
     position: new Vector3(0, 0, 0),
     rotationAngleRad: 1,
@@ -14,6 +22,7 @@ const CREATURE_OPTIONS = () => ({
 
 export class Creature {
     isInitialized = false;
+    scene = null;
 
     position = new Vector3(0, 0, 0); // World frame
     velocity = new Vector3(0, 0, 0); // Local frame
@@ -22,9 +31,10 @@ export class Creature {
     rotationAngleRad = 0;
     rotationMatrix = new Matrix3();
 
-    speed = 1; // How fast the creature can move
-    turnSpeed = 1; // How fast the creature can turn
-    jumpPower = 1; // How high the creature can jump
+    height = null;
+    speed = null;
+    turnSpeed = null;
+    jumpPower = null;
 
     mesh = null;
     isPlayer = false;
@@ -33,7 +43,12 @@ export class Creature {
     isTurningLeft = false;
     isTurningRight = false;
     isMovingBack = false;
+    isAttacking = false;
+
     isTouchingGround = true;
+    isInWater = false;
+
+    isDestroyed = false;
 
     animationMixer = null;
 
@@ -56,6 +71,7 @@ export class Creature {
     }
 
     async init(scene) {
+        this.scene = scene;
         await this.initMesh();
         scene.add(this.mesh);
         this.setRotation(this.rotationAngleRad);
@@ -74,46 +90,34 @@ export class Creature {
                     if (this.isPlayer) {
                         this.setRotation(cameraAngle);
                     }
-                    if (!this.isMovingForward) {
-                        this.startMoveForward();
-                    }
+                    this.isMovingForward = true;
+                    this.isMovingBack = false;
                 } else {
-                    if (this.isMovingForward) {
-                        this.stopMoveForward();
-                    }
+                    this.isMovingForward = false;
                 }
             } else if (actionKey === ACTIONS.KeyA) {
                 if (isActionActive) {
-                    if (!this.isTurningLeft) {
-                        this.startTurnLeft();
-                    }
+                    this.isTurningLeft = true;
+                    this.isTurningRight = false;
                 } else {
-                    if (this.isTurningLeft) {
-                        this.stopTurnLeft();
-                    }
+                    this.isTurningLeft = false;
                 }
             } else if (actionKey === ACTIONS.KeyS) {
                 if (isActionActive) {
                     if (this.isPlayer) {
                         this.setRotation(cameraAngle);
                     }
-                    if (!this.isMovingBack) {
-                        this.startMoveBack();
-                    }
+                    this.isMovingBack = true;
+                    this.isMovingForward = false;
                 } else {
-                    if (this.isMovingBack) {
-                        this.stopMoveBack();
-                    }
+                    this.isMovingBack = false;
                 }
             } else if (actionKey === ACTIONS.KeyD) {
                 if (isActionActive) {
-                    if (!this.isTurningRight) {
-                        this.startTurnRight();
-                    }
+                    this.isTurningRight = true;
+                    this.isTurningLeft = false;
                 } else {
-                    if (this.isTurningRight) {
-                        this.stopTurnRight();
-                    }
+                    this.isTurningRight = false;
                 }
             } else if (actionKey === ACTIONS.Space) {
                 if (isActionActive && this.isTouchingGround) {
@@ -123,12 +127,7 @@ export class Creature {
         }
     }
 
-    update(clockDeltaSeconds, actions, ground, camera) {
-        // Update animation mixer time
-        if (this.animationMixer) {
-            this.animationMixer.update(clockDeltaSeconds);
-        }
-
+    update(clockDeltaSeconds, actions, ground, waters, camera) {
         // Handle player inputted actions
         this.handleActions(actions, camera);
 
@@ -144,6 +143,45 @@ export class Creature {
             this.addRotation(rotationRad);
             if (this.isPlayer) {
                 camera.rotateAboutPoint(this.position, rotationRad);
+            }
+        }
+
+        // Update player velocity based on current actions
+        let movementSpeed = this.speed;
+        movementSpeed *= this.isInWater ? SWIMMING_SPEED : 1;
+        movementSpeed *= this.isAttacking ? ATTACKING_SPEED : 1;
+        if (this.isMovingForward) {
+            this.velocity.z = movementSpeed;
+        } else if (this.isMovingBack) {
+            this.velocity.z = -movementSpeed * BACKWARDS_SPEED;
+        } else {
+            this.velocity.z = 0;
+        }
+
+        // Check if creature is in water, if so, float creature
+        this.isInWater = false;
+        for (let i = 0; i < waters.length; i++) {
+            const water = waters[i];
+            if (
+                water.getIsPointInWater(
+                    this.position.x,
+                    this.position.y + this.height / 2,
+                    this.position.z,
+                )
+            ) {
+                this.isInWater = true;
+                if (this.position.y + this.height / 2 < water.yLevel) {
+                    this.velocity.y += WATER_FLOAT_ACCEL * clockDeltaSeconds;
+                }
+                if (
+                    this.position.y +
+                        this.height / 2 +
+                        this.velocity.y * clockDeltaSeconds >=
+                    water.yLevel
+                ) {
+                    this.velocity.y = 0;
+                    this.position.y = water.yLevel - this.height / 2;
+                }
             }
         }
 
@@ -165,14 +203,15 @@ export class Creature {
         if (
             this.position.y > groundY &&
             this.position.y - groundY < 0.2 &&
-            this.velocity.y === 0
+            this.velocity.y === 0 &&
+            !this.isInWater
         ) {
             this.position.y = groundY;
         }
 
         // If not touching ground, fall
-        if (this.position.y > groundY) {
-            this.velocity.y -= GRAVITY_ACCELERATION * clockDeltaSeconds;
+        if (this.position.y > groundY && !this.isInWater) {
+            this.velocity.y -= GRAVITY_ACCEL * clockDeltaSeconds;
             if (this.velocity.y < -TERMINAL_VELOCITY) {
                 this.velocity.y = -TERMINAL_VELOCITY;
             }
@@ -196,6 +235,14 @@ export class Creature {
             this.position.z,
         );
 
+        // Update creature animations
+        if (this.animationMixer) {
+            this.animationMixer.update(clockDeltaSeconds);
+        }
+        if (this.updateAnimations) {
+            this.updateAnimations();
+        }
+
         // Update camera if player
         if (this.isPlayer) {
             camera.moveCamera(
@@ -216,47 +263,14 @@ export class Creature {
         this.setRotation(this.rotationAngleRad + angleRad);
     }
 
-    startMoveForward() {
-        this.stopMoveBack();
-        this.isMovingForward = true;
-        this.velocity.z = this.speed;
-    }
-
-    stopMoveForward() {
-        this.isMovingForward = false;
-        this.velocity.z = 0;
-    }
-
-    startTurnLeft() {
-        this.stopTurnRight();
-        this.isTurningLeft = true;
-    }
-
-    stopTurnLeft() {
-        this.isTurningLeft = false;
-    }
-
-    startTurnRight() {
-        this.stopTurnLeft();
-        this.isTurningRight = true;
-    }
-
-    stopTurnRight() {
-        this.isTurningRight = false;
-    }
-
-    startMoveBack() {
-        this.stopMoveForward();
-        this.isMovingBack = true;
-        this.velocity.z = -this.speed * BACKWARDS_SPEED;
-    }
-
-    stopMoveBack() {
-        this.isMovingBack = false;
-        this.velocity.z = 0;
-    }
-
     jump() {
-        this.velocity.y = this.jumpPower;
+        let jumpPower = this.jumpPower;
+        jumpPower *= this.isAttacking ? JUMP_POWER_WHILE_ATTACKING : 1;
+        this.velocity.y = jumpPower;
+    }
+
+    destroy() {
+        this.isDestroyed = true;
+        this.scene.remove(this.mesh);
     }
 }

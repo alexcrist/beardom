@@ -28,13 +28,17 @@ export class World {
 
         this.actionListener = new ActionListener();
 
-        this.player = LEVEL_1.player;
-        this.creatures = LEVEL_1.creatures;
-        this.ground = LEVEL_1.ground;
-        this.camera = LEVEL_1.camera;
-        this.lights = LEVEL_1.lights;
+        const level = LEVEL_1;
+        const { player, creatures, ground, waters, camera, lights } = level;
+        this.player = player;
+        this.creatures = creatures;
+        this.ground = ground;
+        this.waters = waters;
+        this.camera = camera;
+        this.lights = lights;
 
         this.scene.add(this.ground.mesh);
+        this.waters.forEach((water) => this.scene.add(water.mesh));
         this.lights.forEach((light) => this.scene.add(light));
 
         this.peerConnector = new PeerConnector(this.scene, this.player);
@@ -67,13 +71,16 @@ export class World {
             this.peerConnector.getCreatures(),
         );
         for (let i = 0; i < allCreatures.length; i++) {
-            const actionsForCreature = allCreatures[i].isPlayer
-                ? actions
-                : null;
-            allCreatures[i].update(
+            const creature = allCreatures[i];
+            if (creature.isDestroyed) {
+                continue;
+            }
+            const actionsForCreature = creature.isPlayer ? actions : null;
+            creature.update(
                 clockDeltaSeconds,
                 actionsForCreature,
                 this.ground,
+                this.waters,
                 this.camera,
             );
         }

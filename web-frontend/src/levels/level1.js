@@ -4,6 +4,7 @@ import { Bear } from "../entities/Bear";
 import { Camera } from "../entities/Camera";
 import { Ground } from "../entities/Ground";
 import { Tree } from "../entities/Tree";
+import { Water } from "../entities/Water";
 
 const getRandom = alea("lucy");
 
@@ -17,6 +18,29 @@ const ground = new Ground({
     texturePath: new URL("../assets/grassloop.png", import.meta.url).href,
     perlinNoiseSeed: "lucy",
 });
+
+const water1 = new Water({
+    xOrigin: 26,
+    yOrigin: -0.2,
+    zOrigin: 18,
+    ground,
+});
+
+const water2 = new Water({
+    xOrigin: 47,
+    yOrigin: 0,
+    zOrigin: 61,
+    ground,
+});
+
+const water3 = new Water({
+    xOrigin: 5,
+    yOrigin: 0,
+    zOrigin: 67,
+    ground,
+});
+
+const waters = [water1, water2, water3];
 
 const player = new Bear({
     isPlayer: true,
@@ -61,4 +85,4 @@ const light3 = new AmbientLight(0xffffff, 0.3);
 
 const lights = [light1, light2, light3];
 
-export const LEVEL_1 = { player, creatures, ground, camera, lights };
+export const LEVEL_1 = { player, creatures, ground, waters, camera, lights };

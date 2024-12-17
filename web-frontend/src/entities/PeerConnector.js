@@ -86,13 +86,20 @@ export class PeerConnector {
 
         connection.on("close", () => {
             console.info("Connection closed.");
+            const mesh = this.bears[peerId].mesh;
+            this.scene.remove(mesh);
+            mesh.geometry.dispose();
+            mesh.material.dispose();
             delete this.bears[peerId];
         });
     }
 
     update(actions) {
-        // TODO: coalesce all updates of actions
-        this.actions = actions;
+        // Send all actions performed since the last update
+        for (const actionKey in actions) {
+            this.actions[actionKey] =
+                this.actions[actionKey] ?? actions[actionKey];
+        }
     }
 
     getCreatures() {

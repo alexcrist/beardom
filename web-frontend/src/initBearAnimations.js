@@ -13,6 +13,15 @@ const ANIMATION_ACTIONS_METADATA = {
     moveBack: {
         name: "Arm_Bear|Walk_B_IP",
     },
+    moveForwardSlow: {
+        name: "Arm_Bear|Trot_F_IP",
+    },
+    fallLow: {
+        name: "Arm_Bear|Fall_Low",
+    },
+    fallHigh: {
+        name: "Arm_Bear|Fall_high",
+    },
     jump: {
         name: "Arm_Bear|Jump_place",
         options: {
@@ -31,13 +40,45 @@ const ANIMATION_ACTIONS_METADATA = {
             loop: THREE.LoopOnce,
         },
     },
+    attack3: {
+        name: "Arm_Bear|Attack_L",
+        options: {
+            loop: THREE.LoopOnce,
+        },
+    },
+    attack4: {
+        name: "Arm_Bear|Attack_R",
+        options: {
+            loop: THREE.LoopOnce,
+        },
+    },
+    idle1: {
+        name: "Arm_Bear|Idle_1",
+        options: {
+            loop: THREE.LoopOnce,
+        },
+    },
+    idle2: {
+        name: "Arm_Bear|Idle_2",
+        options: {
+            loop: THREE.LoopOnce,
+        },
+    },
+    idle3: {
+        name: "Arm_Bear|Idle_3",
+        options: {
+            loop: THREE.LoopOnce,
+        },
+    },
+    idle4: {
+        name: "Arm_Bear|Idle_4",
+        options: {
+            loop: THREE.LoopOnce,
+        },
+    },
 };
 
 export const initBearAnimations = (gltf) => {
-    // console.info(
-    //     "Bear animations",
-    //     gltf.animations.map((animation) => animation.name).sort(),
-    // );
     const animationActions = {};
     const animationMixer = new THREE.AnimationMixer(gltf.scene);
     for (const animationKey in ANIMATION_ACTIONS_METADATA) {
