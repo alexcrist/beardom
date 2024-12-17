@@ -1,0 +1,9 @@
+{
+    "type": "module",
+    "scripts": {
+        "start": "./run.sh"
+    },
+    "dependencies": {
+        "peer": "^1.0.2"
+    }
+}
