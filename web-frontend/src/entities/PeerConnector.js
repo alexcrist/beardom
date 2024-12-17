@@ -1,8 +1,8 @@
 import { Peer } from "peerjs";
 import { Bear } from "./Bear";
 
-const SERVER_IP = "24.199.73.27";
-const SERVER_PORT = 9000;
+const SERVER_IP = "beardom.uw.r.appspot.com";
+const SERVER_PORT = 443;
 const SERVER_KEY = "beardom";
 
 export class PeerConnector {
@@ -25,20 +25,23 @@ export class PeerConnector {
             host: SERVER_IP,
             port: SERVER_PORT,
             key: SERVER_KEY,
+            secure: true,
         });
         this.peer.on("open", this.onConnect.bind(this));
         this.peer.on("connection", (connection) => {
             this.initConnection(connection);
+        });
+        this.peer.on("error", (error) => {
+            console.error(error);
         });
     }
 
     async onConnect(id) {
         this.id = id;
         console.info("Connected with ID:", id);
-        const res = await fetch(
-            `http://${SERVER_IP}:${SERVER_PORT}/${SERVER_KEY}/peers`,
-        );
+        const res = await fetch(`https://${SERVER_IP}/${SERVER_KEY}/peers`);
         const peerIds = await res.json();
+        console.log("peerIds", peerIds);
         for (const peerId of peerIds) {
             const isSelf = peerId === this.id;
             if (!isSelf) {

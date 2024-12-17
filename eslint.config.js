@@ -6,9 +6,10 @@ import globals from "globals";
 
 export default [
     {
+        env: {
+            node: true,
+        },
         ignores: ["**/dist"],
-    },
-    {
         files: ["**/*.{js,jsx}"],
         languageOptions: {
             ecmaVersion: 2020,

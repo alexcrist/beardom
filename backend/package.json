@@ -1,9 +1,12 @@
 {
     "type": "module",
     "scripts": {
-        "start": "./run.sh"
+        "start": "node server.js",
+        "deploy": "gcloud app deploy --project=beardom --promote app.yml"
     },
     "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.21.2",
         "peer": "^1.0.2"
     }
 }
