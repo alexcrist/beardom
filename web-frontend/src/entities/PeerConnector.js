@@ -5,8 +5,13 @@ export class PeerConnector {
     scene = null;
     player = null;
     peer = null;
-    bears = {};
+
+    // Actions to send to connected peer
     actions = {};
+
+    // Creatures and actions from connected peer
+    peerCreatures = {};
+    peerActions = {};
 
     constructor(scene, player) {
         this.scene = scene;
@@ -45,26 +50,27 @@ export class PeerConnector {
         });
 
         connection.on("data", (data) => {
-            if (this.bears[peerId].isInitialized) {
-                this.bears[peerId].handleActions(data.actions);
-                this.bears[peerId].position.set(
+            if (this.peerCreatures[peerId].isInitialized) {
+                this.peerCreatures[peerId].position.set(
                     data.position[0],
                     data.position[1],
                     data.position[2],
                 );
-                this.bears[peerId].velocity.set(
+                this.peerCreatures[peerId].velocity.set(
                     data.velocity[0],
                     data.velocity[1],
                     data.velocity[2],
                 );
-                this.bears[peerId].setRotation(data.rotationAngleRad);
+                this.peerCreatures[peerId].setRotation(data.rotationAngleRad);
+                this.peerActions[peerId] = data.actions;
             }
         });
 
         connection.on("open", () => {
-            this.bears[peerId] = new Bear();
-            this.bears[peerId].init(this.scene);
+            this.peerCreatures[peerId] = new Bear({ isPeer: true });
+            this.peerCreatures[peerId].init(this.scene);
             setInterval(() => {
+                console.log("this.actions", this.actions);
                 connection.send({
                     position: [
                         this.player.position.x,
@@ -79,18 +85,16 @@ export class PeerConnector {
                     rotationAngleRad: this.player.rotationAngleRad,
                     actions: this.actions,
                 });
+                this.actions = {};
             }, 50);
-            this.actions = {};
             console.info("Connection opened.");
         });
 
         connection.on("close", () => {
             console.info("Connection closed.");
-            const mesh = this.bears[peerId].mesh;
-            this.scene.remove(mesh);
-            mesh.geometry.dispose();
-            mesh.material.dispose();
-            delete this.bears[peerId];
+            this.peerCreatures[peerId].destroy();
+            delete this.peerCreatures[peerId];
+            delete this.peerActions[peerId];
         });
     }
 
@@ -98,13 +102,17 @@ export class PeerConnector {
         // Send all actions performed since the last update
         for (const actionKey in actions) {
             this.actions[actionKey] =
-                this.actions[actionKey] ?? actions[actionKey];
+                this.actions[actionKey] || actions[actionKey];
         }
     }
 
-    getCreatures() {
-        return Object.values(this.bears).filter(
-            (creature) => creature.isInitialized,
-        );
+    getPeerCreaturesAndActions() {
+        const peerCreatures = [];
+        const peerActions = [];
+        for (const key in this.peerCreatures) {
+            peerCreatures.push(this.peerCreatures[key]);
+            peerActions.push(this.peerActions[key]);
+        }
+        return { peerCreatures, peerActions };
     }
 }

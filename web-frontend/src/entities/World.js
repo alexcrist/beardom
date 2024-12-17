@@ -67,18 +67,26 @@ export class World {
         this.stats.begin();
         const actions = this.actionListener.actions;
         const clockDeltaSeconds = this.clock.getDelta();
-        const allCreatures = this.creatures.concat(
-            this.peerConnector.getCreatures(),
+        const localCreatures = this.creatures;
+        const localActions = this.creatures.map((creature) =>
+            creature.isPlayer ? actions : null,
         );
+        const { peerCreatures, peerActions } =
+            this.peerConnector.getPeerCreaturesAndActions();
+        const allCreatures = localCreatures.concat(peerCreatures);
+        const allActions = localActions.concat(peerActions);
         for (let i = 0; i < allCreatures.length; i++) {
             const creature = allCreatures[i];
-            if (creature.isDestroyed) {
+            if (creature.isDestroyed || !creature.isInitialized) {
                 continue;
             }
-            const actionsForCreature = creature.isPlayer ? actions : null;
+            const actions = allActions[i];
+            // if (creature.isPeer) {
+            //     console.log("actions", actions);
+            // }
             creature.update(
                 clockDeltaSeconds,
-                actionsForCreature,
+                actions,
                 this.ground,
                 this.waters,
                 this.camera,

@@ -93,7 +93,7 @@ export class Bear extends Creature {
 
     handleActions(actions, camera) {
         super.handleActions(actions, camera);
-        if (actions === null) {
+        if (!actions) {
             return;
         }
         if (actions[ACTIONS.LeftClick]) {
@@ -131,9 +131,9 @@ export class Bear extends Creature {
 
         // Swim
         if (this.isInWater) {
-            this.animateSwimForward();
+            this.animateSwim();
         } else {
-            this.stopAnimateSwimForward();
+            this.stopAnimateSwim();
         }
 
         // Turn left
@@ -168,7 +168,7 @@ export class Bear extends Creature {
         }
     }
 
-    animateSwimForward() {
+    animateSwim() {
         if (this.animationMoveForwardSlow.isStopped) {
             this.animationMoveForwardSlow.isStopped = false;
             this.animationMoveForwardSlow
@@ -178,17 +178,11 @@ export class Bear extends Creature {
         }
     }
 
-    stopAnimateSwimForward() {
+    stopAnimateSwim() {
         if (!this.animationMoveForwardSlow.isStopped) {
             this.animationMoveForwardSlow.isStopped = true;
             this.animationMoveForwardSlow.fadeOut(ANIMATION_TRANSITION_SECONDS);
         }
-    }
-
-    animateSwimBack() {}
-
-    stopAnimateSwimBack() {
-        // TODO
     }
 
     animateTurnLeft() {

@@ -16,6 +16,7 @@ const CREATURE_OPTIONS = () => ({
     jumpPower: 10,
     height: 1,
     isPlayer: false,
+    isPeer: false,
     position: new Vector3(0, 0, 0),
     rotationAngleRad: 1,
 });
@@ -79,7 +80,7 @@ export class Creature {
     }
 
     handleActions(actions, camera) {
-        if (actions === null) {
+        if (!actions) {
             return;
         }
         const cameraAngle = camera?.getCameraAngle();
