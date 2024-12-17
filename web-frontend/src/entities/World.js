@@ -81,9 +81,6 @@ export class World {
                 continue;
             }
             const actions = allActions[i];
-            // if (creature.isPeer) {
-            //     console.log("actions", actions);
-            // }
             creature.update(
                 clockDeltaSeconds,
                 actions,

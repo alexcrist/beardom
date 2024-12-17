@@ -1,6 +1,10 @@
 import { Peer } from "peerjs";
 import { Bear } from "./Bear";
 
+const SERVER_IP = "24.199.73.27";
+const SERVER_PORT = 9000;
+const SERVER_KEY = "beardom";
+
 export class PeerConnector {
     scene = null;
     player = null;
@@ -16,30 +20,32 @@ export class PeerConnector {
     constructor(scene, player) {
         this.scene = scene;
         this.player = player;
-        const id = `beardom_${Math.floor(Math.random() * 100000)}`;
-        this.peer = new Peer(id);
-        this.peer.on("open", (id) => {
-            console.info("Peer opened with ID:", id);
+        // const id = `beardom_${Math.floor(Math.random() * 100000)}`;
+        this.peer = new Peer(null, {
+            host: SERVER_IP,
+            port: SERVER_PORT,
+            key: SERVER_KEY,
         });
+        this.peer.on("open", this.onConnect.bind(this));
         this.peer.on("connection", (connection) => {
             this.initConnection(connection);
         });
-        document.querySelector("#peer-id").innerText = id;
-        document
-            .querySelector("#connection-form")
-            .addEventListener("submit", this.onSubmit.bind(this));
     }
 
-    onSubmit(event) {
-        event.preventDefault();
-        const peerId = document.querySelector("#peer-id-input").value;
-        if (!peerId) {
-            return;
+    async onConnect(id) {
+        this.id = id;
+        console.info("Connected with ID:", id);
+        const res = await fetch(
+            `http://${SERVER_IP}:${SERVER_PORT}/${SERVER_KEY}/peers`,
+        );
+        const peerIds = await res.json();
+        for (const peerId of peerIds) {
+            const isSelf = peerId === this.id;
+            if (!isSelf) {
+                const connection = this.peer.connect(peerId);
+                this.initConnection(connection);
+            }
         }
-
-        console.log(`Connecting to ${peerId}...`);
-        const connection = this.peer.connect(peerId);
-        this.initConnection(connection);
     }
 
     initConnection(connection) {
@@ -70,7 +76,6 @@ export class PeerConnector {
             this.peerCreatures[peerId] = new Bear({ isPeer: true });
             this.peerCreatures[peerId].init(this.scene);
             setInterval(() => {
-                console.log("this.actions", this.actions);
                 connection.send({
                     position: [
                         this.player.position.x,
@@ -87,11 +92,9 @@ export class PeerConnector {
                 });
                 this.actions = {};
             }, 50);
-            console.info("Connection opened.");
         });
 
         connection.on("close", () => {
-            console.info("Connection closed.");
             this.peerCreatures[peerId].destroy();
             delete this.peerCreatures[peerId];
             delete this.peerActions[peerId];

@@ -24,11 +24,6 @@ export class Bear extends Creature {
 
     constructor(options) {
         super(options, BEAR_OPTIONS);
-        if (this.isPlayer) {
-            setInterval(() => {
-                console.log("this.position", this.position);
-            }, 1000);
-        }
     }
 
     async initMesh() {
@@ -48,14 +43,14 @@ export class Bear extends Creature {
                     import.meta.url,
                 ).href,
                 (gltf) => {
-                    if (this.isPlayer) {
-                        console.info(
-                            "Bear animations",
-                            gltf.animations
-                                .map((animation) => animation.name)
-                                .sort(),
-                        );
-                    }
+                    // if (this.isPlayer) {
+                    //     console.info(
+                    //         "Bear animations",
+                    //         gltf.animations
+                    //             .map((animation) => animation.name)
+                    //             .sort(),
+                    //     );
+                    // }
                     gltf.scene.traverse((child) => {
                         if (child.isMesh) {
                             child.material = material;
