@@ -50,7 +50,6 @@ const MenuSectionPlayer = () => {
                     <FaPen
                         onClick={onClickEditName}
                         className={styles.icon}
-                        style={{ paddingTop: 6 }}
                         size={12}
                     />
                 </div>

@@ -40,7 +40,7 @@ const Menu = () => {
                         `}
                             onClick={onClickTab(index)}
                         >
-                            <Icon size={30} />
+                            <Icon size={25} />
                             <div className={styles.tabText}>
                                 {menuSection.name}
                             </div>
