@@ -5,12 +5,13 @@ import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 let fontSilkscreen = null;
 
 export const initFonts = async () => {
-    fontSilkscreen = await initFont("../assets/Silkscreen_Regular.json");
+    fontSilkscreen = await initFont(
+        new URL("../assets/Silkscreen_Regular.json", import.meta.url).href,
+    );
 };
 
-const initFont = async (pathString) => {
+const initFont = async (path) => {
     return new Promise((resolve) => {
-        const path = new URL(pathString, import.meta.url).href;
         const fontLoader = new FontLoader();
         fontLoader.load(path, (font) => {
             resolve(font);
