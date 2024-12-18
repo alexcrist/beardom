@@ -25,6 +25,7 @@ export class Tree extends Creature {
                         }
                     });
                     this.mesh = gltf.scene;
+                    this.scene.add(this.mesh);
                     resolve();
                 },
             );

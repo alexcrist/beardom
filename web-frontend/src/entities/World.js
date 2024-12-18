@@ -2,6 +2,7 @@ import Stats from "stats.js";
 import * as THREE from "three";
 import { LEVEL_1 } from "../levels/level1";
 import { initFonts } from "../util/createTextMesh";
+import { initBearAnimator } from "../util/initBearAnimations";
 import { ActionListener } from "./ActionListener";
 import { PeerConnector } from "./PeerConnector";
 
@@ -52,6 +53,7 @@ export class World {
     }
 
     async init() {
+        await initBearAnimator();
         await initFonts();
         for (let i = 0; i < this.creatures.length; i++) {
             await this.creatures[i].init(this.scene);

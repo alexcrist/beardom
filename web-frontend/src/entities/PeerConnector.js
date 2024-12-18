@@ -90,6 +90,7 @@ export class PeerConnector {
                 this.player.velocity.z,
             ],
             rotationAngleRad: this.player.rotationAngleRad,
+            modelName: this.player.modelName,
             actions: this.actions,
         };
         this.actions = {};
@@ -114,6 +115,7 @@ export class PeerConnector {
             );
             this.peerCreatures[peerId].setRotation(data.rotationAngleRad);
             this.peerCreatures[peerId].setName(data.name);
+            this.peerCreatures[peerId].setModelName(data.modelName);
             this.peerActions[peerId] = data.actions;
         }
     }

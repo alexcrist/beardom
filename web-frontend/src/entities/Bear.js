@@ -1,6 +1,5 @@
-import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { initBearAnimations } from "../initBearAnimations";
+import { getBearAnimations } from "../util/initBearAnimations";
+import { loadBearModel } from "../util/loadBearModel";
 import { ACTIONS } from "./ActionListener";
 import { Creature } from "./Creature";
 
@@ -10,7 +9,22 @@ const BEAR_OPTIONS = {
     turnSpeed: 2,
     jumpPower: 30,
     height: 1.8,
+    modelName: "01",
 };
+
+export const BEAR_MODELS = [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+];
 
 export class Bear extends Creature {
     animationMoveForward = null;
@@ -26,64 +40,44 @@ export class Bear extends Creature {
         super(options, BEAR_OPTIONS);
     }
 
+    async setModelName(modelName) {
+        if (modelName !== this.modelName) {
+            this.modelName = modelName;
+            await this.initMesh();
+        }
+    }
+
     async initMesh() {
-        await new Promise((resolve) => {
-            const textureLoader = new THREE.TextureLoader();
-            const texture = textureLoader.load(
-                new URL(
-                    "../assets/LowPoly_Bears_pack_v01/texture/PolyArt_Forest_color.png",
-                    import.meta.url,
-                ).href,
-            );
-            const material = new THREE.MeshStandardMaterial({ map: texture });
-            const loader = new GLTFLoader();
-            loader.load(
-                new URL(
-                    "../assets/LowPoly_Bears_pack_v01/LowPoly_Bear_IP.glb",
-                    import.meta.url,
-                ).href,
-                (gltf) => {
-                    // if (this.isPlayer) {
-                    //     console.info(
-                    //         "Bear animations",
-                    //         gltf.animations
-                    //             .map((animation) => animation.name)
-                    //             .sort(),
-                    //     );
-                    // }
-                    gltf.scene.traverse((child) => {
-                        if (child.isMesh) {
-                            child.material = material;
-                        }
-                    });
-                    this.mesh = gltf.scene;
-                    const { animationMixer, animationActions } =
-                        initBearAnimations(gltf);
-                    Object.values(animationActions).forEach(
-                        (action) => (action.isStopped = true),
-                    );
-                    this.animationMixer = animationMixer;
-                    this.animationMoveForward = animationActions.moveForward;
-                    this.animationMoveForwardSlow =
-                        animationActions.moveForwardSlow;
-                    this.animationMoveLeft = animationActions.moveLeft;
-                    this.animationMoveRight = animationActions.moveRight;
-                    this.animationMoveBack = animationActions.moveBack;
-                    this.animationJump = animationActions.jump;
-                    this.animationAttack1 = animationActions.attack1;
-                    this.animationAttack2 = animationActions.attack2;
-                    this.animationAttack3 = animationActions.attack3;
-                    this.animationAttack4 = animationActions.attack4;
-                    this.animationFallLow = animationActions.fallLow;
-                    this.animationFallHigh = animationActions.fallHigh;
-                    this.animationIdle1 = animationActions.idle1;
-                    this.animationIdle2 = animationActions.idle2;
-                    this.animationIdle3 = animationActions.idle3;
-                    this.animationIdle4 = animationActions.idle4;
-                    resolve();
-                },
-            );
-        });
+        const oldMesh = this.mesh;
+        const gltf = await loadBearModel(this.modelName);
+        this.mesh = gltf.scene;
+        this.scene.add(this.mesh);
+        if (oldMesh) {
+            this.scene.remove(oldMesh);
+        }
+        const { animationMixer, animationActions } = getBearAnimations(
+            this.mesh,
+        );
+        Object.values(animationActions).forEach(
+            (action) => (action.isStopped = true),
+        );
+        this.animationMixer = animationMixer;
+        this.animationMoveForward = animationActions.moveForward;
+        this.animationMoveForwardSlow = animationActions.moveForwardSlow;
+        this.animationMoveLeft = animationActions.moveLeft;
+        this.animationMoveRight = animationActions.moveRight;
+        this.animationMoveBack = animationActions.moveBack;
+        this.animationJump = animationActions.jump;
+        this.animationAttack1 = animationActions.attack1;
+        this.animationAttack2 = animationActions.attack2;
+        this.animationAttack3 = animationActions.attack3;
+        this.animationAttack4 = animationActions.attack4;
+        this.animationFallLow = animationActions.fallLow;
+        this.animationFallHigh = animationActions.fallHigh;
+        this.animationIdle1 = animationActions.idle1;
+        this.animationIdle2 = animationActions.idle2;
+        this.animationIdle3 = animationActions.idle3;
+        this.animationIdle4 = animationActions.idle4;
     }
 
     handleActions(actions, camera) {

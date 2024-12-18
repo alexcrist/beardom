@@ -13,7 +13,7 @@ const SWIMMING_SPEED = 0.5;
 const ATTACKING_SPEED = 0.5;
 const JUMP_POWER_WHILE_ATTACKING = 0.8;
 const JUMP_POWER_WHILE_SWIMMING = 0.5;
-const TEXT_Y_OFFSET = 2;
+const TEXT_Y_OFFSET = 3;
 
 const CREATURE_OPTIONS = () => ({
     speed: 1,
@@ -73,7 +73,14 @@ export class Creature {
         const creatureOptions = CREATURE_OPTIONS();
         const getOption = (key) =>
             options?.[key] ?? defaultOptions?.[key] ?? creatureOptions[key];
-        for (const key in creatureOptions) {
+        const keys = Array.from(
+            new Set(
+                Object.keys(creatureOptions)
+                    .concat(Object.keys(options))
+                    .concat(Object.keys(defaultOptions)),
+            ),
+        );
+        for (const key of keys) {
             this[key] = getOption(key);
         }
         if (this.isPlayer) {
@@ -104,7 +111,6 @@ export class Creature {
         this.scene = scene;
         await this.initMesh();
         this.setName(this.name);
-        scene.add(this.mesh);
         this.setRotation(this.rotationAngleRad);
         this.isInitialized = true;
     }
@@ -296,6 +302,16 @@ export class Creature {
                 this.position.y + TEXT_Y_OFFSET,
                 this.position.z,
             );
+            const angleRad =
+                Math.atan2(
+                    this.position.z - camera.camera.position.z,
+                    this.position.x - camera.camera.position.x,
+                ) +
+                Math.PI / 2;
+            this.textMesh.setRotationFromAxisAngle(
+                new Vector3(0, 1, 0),
+                -angleRad,
+            );
         }
 
         // Update camera if player
@@ -312,12 +328,6 @@ export class Creature {
         this.rotationAngleRad = angleRad;
         this.rotationMatrix.makeRotation(angleRad);
         this.mesh.setRotationFromAxisAngle(new Vector3(0, 1, 0), -angleRad);
-        if (this.textMesh) {
-            this.textMesh.setRotationFromAxisAngle(
-                new Vector3(0, 1, 0),
-                -angleRad,
-            );
-        }
     }
 
     addRotation(angleRad) {
