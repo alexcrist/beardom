@@ -1,6 +1,6 @@
 import { PerspectiveCamera, Vector3 } from "three/src/Three.js";
 
-const CAMERA_VERTICAL_OFFSET = 1;
+const CAMERA_VERTICAL_OFFSET = 2;
 
 export class Camera {
     camera = null;

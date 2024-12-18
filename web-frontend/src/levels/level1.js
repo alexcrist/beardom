@@ -50,7 +50,7 @@ const player = new Bear({
 
 const camera = new Camera({
     player,
-    position: new Vector3(-5, 5, -5),
+    position: new Vector3(-5, 6.5, -5),
 });
 
 const bears = [];

@@ -10,6 +10,8 @@ const BACKWARDS_SPEED = 0.75;
 const SWIMMING_SPEED = 0.5;
 const ATTACKING_SPEED = 0.5;
 const JUMP_POWER_WHILE_ATTACKING = 0.8;
+const JUMP_POWER_WHILE_SWIMMING = 0.5;
+const JUMP_COOLDOWN_WHILE_SWIMMING = 2;
 const CREATURE_OPTIONS = () => ({
     speed: 1,
     turnSpeed: 2,
@@ -24,6 +26,7 @@ const CREATURE_OPTIONS = () => ({
 export class Creature {
     isInitialized = false;
     scene = null;
+    mesh = null;
 
     position = new Vector3(0, 0, 0); // World frame
     velocity = new Vector3(0, 0, 0); // Local frame
@@ -32,12 +35,11 @@ export class Creature {
     rotationAngleRad = 0;
     rotationMatrix = new Matrix3();
 
-    height = null;
     speed = null;
     turnSpeed = null;
     jumpPower = null;
+    height = null;
 
-    mesh = null;
     isPlayer = false;
 
     isMovingForward = false;
@@ -45,9 +47,15 @@ export class Creature {
     isTurningRight = false;
     isMovingBack = false;
     isAttacking = false;
+    isJumping = false;
 
     isTouchingGround = true;
     isInWater = false;
+    isAtWaterSurface = false;
+
+    // 'wasInWater' is true if the player was in water more recently than they were
+    // on ground
+    wasInWater = false;
 
     isDestroyed = false;
 
@@ -83,6 +91,7 @@ export class Creature {
         if (!actions) {
             return;
         }
+        this.isJumping = false;
         const cameraAngle = camera?.getCameraAngle();
         for (const actionKey in actions) {
             const isActionActive = actions[actionKey];
@@ -121,7 +130,7 @@ export class Creature {
                     this.isTurningRight = false;
                 }
             } else if (actionKey === ACTIONS.Space) {
-                if (isActionActive && this.isTouchingGround) {
+                if (isActionActive) {
                     this.jump();
                 }
             }
@@ -129,6 +138,10 @@ export class Creature {
     }
 
     update(clockDeltaSeconds, actions, ground, waters, camera) {
+        const oldPosX = this.position.x;
+        const oldPosY = this.position.y;
+        const oldPosZ = this.position.z;
+
         // Handle player inputted actions
         this.handleActions(actions, camera);
 
@@ -149,7 +162,7 @@ export class Creature {
 
         // Update player velocity based on current actions
         let movementSpeed = this.speed;
-        movementSpeed *= this.isInWater ? SWIMMING_SPEED : 1;
+        movementSpeed *= this.wasInWater ? SWIMMING_SPEED : 1;
         movementSpeed *= this.isAttacking ? ATTACKING_SPEED : 1;
         if (this.isMovingForward) {
             this.velocity.z = movementSpeed;
@@ -161,6 +174,7 @@ export class Creature {
 
         // Check if creature is in water, if so, float creature
         this.isInWater = false;
+        this.isAtWaterSurface = false;
         for (let i = 0; i < waters.length; i++) {
             const water = waters[i];
             if (
@@ -171,6 +185,7 @@ export class Creature {
                 )
             ) {
                 this.isInWater = true;
+                this.wasInWater = true;
                 if (this.position.y + this.height / 2 < water.yLevel) {
                     this.velocity.y += WATER_FLOAT_ACCEL * clockDeltaSeconds;
                 }
@@ -178,10 +193,12 @@ export class Creature {
                     this.position.y +
                         this.height / 2 +
                         this.velocity.y * clockDeltaSeconds >=
-                    water.yLevel
+                        water.yLevel &&
+                    !this.isJumping
                 ) {
                     this.velocity.y = 0;
                     this.position.y = water.yLevel - this.height / 2;
+                    this.isAtWaterSurface = true;
                 }
             }
         }
@@ -191,9 +208,6 @@ export class Creature {
         velocityXZ.applyMatrix3(this.rotationMatrix);
         const velocityX = velocityXZ.x;
         const velocityZ = velocityXZ.y;
-        const oldPosX = this.position.x;
-        const oldPosY = this.position.y;
-        const oldPosZ = this.position.z;
         this.position.x += velocityX * clockDeltaSeconds;
         this.position.y += this.velocity.y * clockDeltaSeconds;
         this.position.z += velocityZ * clockDeltaSeconds;
@@ -227,7 +241,14 @@ export class Creature {
         }
 
         // Update isTouchingGround
-        this.isTouchingGround = this.position.y === groundY;
+        if (this.position.y === groundY) {
+            this.isTouchingGround = true;
+            if (!this.isInWater) {
+                this.wasInWater = false;
+            }
+        } else {
+            this.isTouchingGround = false;
+        }
 
         // Transform mesh to match position
         this.mesh.position.set(
@@ -265,9 +286,16 @@ export class Creature {
     }
 
     jump() {
-        let jumpPower = this.jumpPower;
-        jumpPower *= this.isAttacking ? JUMP_POWER_WHILE_ATTACKING : 1;
-        this.velocity.y = jumpPower;
+        if (
+            (this.isTouchingGround && !this.isInWater) ||
+            this.isAtWaterSurface
+        ) {
+            let jumpPower = this.jumpPower;
+            jumpPower *= this.isAttacking ? JUMP_POWER_WHILE_ATTACKING : 1;
+            jumpPower *= this.isInWater ? JUMP_POWER_WHILE_SWIMMING : 1;
+            this.velocity.y = jumpPower;
+            this.isJumping = true;
+        }
     }
 
     destroy() {

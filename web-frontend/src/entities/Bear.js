@@ -98,7 +98,9 @@ export class Bear extends Creature {
 
     jump() {
         super.jump();
-        this.animateJump();
+        if (this.isJumping) {
+            this.animateJump();
+        }
     }
 
     attack() {
@@ -241,7 +243,7 @@ export class Bear extends Creature {
         let animations = [];
         let animationTimes = [];
         let animationWeights = [];
-        if (this.isInWater) {
+        if (this.wasInWater) {
             if (this.attackIndex % 2 === 0) {
                 animations.push(this.animationAttack3);
                 animationTimes.push(0);

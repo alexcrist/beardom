@@ -41,7 +41,6 @@ export class PeerConnector {
         console.info("Connected with ID:", id);
         const res = await fetch(`https://${SERVER_IP}/${SERVER_KEY}/peers`);
         const peerIds = await res.json();
-        console.log("peerIds", peerIds);
         for (const peerId of peerIds) {
             const isSelf = peerId === this.id;
             if (!isSelf) {
