@@ -19,4 +19,12 @@ const peerServer = ExpressPeerServer(server, {
     allow_discovery: true,
 });
 
+peerServer.on("connection", (client) => {
+    // TODO: basic logging
+});
+
+peerServer.on("disconnect", (client) => {
+    // TODO: basic logging
+});
+
 app.use("/", peerServer);

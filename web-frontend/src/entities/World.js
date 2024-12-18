@@ -1,10 +1,12 @@
-import Stats from "stats.js";
 import * as THREE from "three";
 import { LEVEL_1 } from "../levels/level1";
+import mainSlice from "../mainSlice";
+import { store } from "../store";
 import { initFonts } from "../util/createTextMesh";
 import { initBearAnimator } from "../util/initBearAnimations";
 import { ActionListener } from "./ActionListener";
 import { PeerConnector } from "./PeerConnector";
+import { Stats } from "./Stats";
 
 export class World {
     scene = null;
@@ -17,12 +19,10 @@ export class World {
     actionListener = null;
     stats = null;
 
-    constructor() {
+    constructor(canvas) {
         this.scene = new THREE.Scene();
 
-        this.renderer = new THREE.WebGLRenderer({
-            canvas: document.getElementById("canvas"),
-        });
+        this.renderer = new THREE.WebGLRenderer({ canvas });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor("#90CCE6", 1);
 
@@ -48,8 +48,6 @@ export class World {
         window.addEventListener("resize", this.onWindowResize.bind(this));
 
         this.stats = new Stats();
-        this.stats.showPanel(0);
-        document.body.appendChild(this.stats.dom);
     }
 
     async init() {
@@ -96,7 +94,12 @@ export class World {
         this.peerConnector.update(actions);
         this.camera.update();
         this.renderer.render(this.scene, this.camera.camera);
+        store.dispatch(mainSlice.actions.setPlayer(this.player.serialize()));
         this.stats.end();
         requestAnimationFrame(() => this.update());
+    }
+
+    setName(name) {
+        this.player.setName(name);
     }
 }

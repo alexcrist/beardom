@@ -5,7 +5,7 @@ import {
     WATER_FLOAT_ACCEL,
 } from "../constants";
 import { createTextMesh } from "../util/createTextMesh";
-import { getName } from "../util/name";
+import { getName, setName } from "../util/name";
 import { ACTIONS } from "./ActionListener";
 
 const BACKWARDS_SPEED = 0.75;
@@ -97,6 +97,9 @@ export class Creature {
     setName(name) {
         if (name && (name !== this.name || !this.textMesh)) {
             this.name = name;
+            if (this.isPlayer) {
+                setName(name);
+            }
             if (this.isPeer) {
                 const oldTextMesh = this.textMesh;
                 const newTextMesh = createTextMesh(this.name);
@@ -345,6 +348,19 @@ export class Creature {
             this.velocity.y = jumpPower;
             this.isJumping = true;
         }
+    }
+
+    serialize() {
+        return {
+            position: {
+                x: this.position.x,
+                y: this.position.y,
+                z: this.position.z,
+            },
+            rotationAngleRad: this.rotationAngleRad,
+            rotationAngleDeg: (this.rotationAngleRad / Math.PI) * 180,
+            name: this.name,
+        };
     }
 
     destroy() {
