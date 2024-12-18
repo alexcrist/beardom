@@ -4,6 +4,8 @@ import {
     TERMINAL_VELOCITY,
     WATER_FLOAT_ACCEL,
 } from "../constants";
+import { createTextMesh } from "../util/createTextMesh";
+import { getName } from "../util/name";
 import { ACTIONS } from "./ActionListener";
 
 const BACKWARDS_SPEED = 0.75;
@@ -11,7 +13,8 @@ const SWIMMING_SPEED = 0.5;
 const ATTACKING_SPEED = 0.5;
 const JUMP_POWER_WHILE_ATTACKING = 0.8;
 const JUMP_POWER_WHILE_SWIMMING = 0.5;
-const JUMP_COOLDOWN_WHILE_SWIMMING = 2;
+const TEXT_Y_OFFSET = 2;
+
 const CREATURE_OPTIONS = () => ({
     speed: 1,
     turnSpeed: 2,
@@ -27,6 +30,7 @@ export class Creature {
     isInitialized = false;
     scene = null;
     mesh = null;
+    name = null;
 
     position = new Vector3(0, 0, 0); // World frame
     velocity = new Vector3(0, 0, 0); // Local frame
@@ -41,6 +45,7 @@ export class Creature {
     height = null;
 
     isPlayer = false;
+    isPeer = false;
 
     isMovingForward = false;
     isTurningLeft = false;
@@ -71,6 +76,9 @@ export class Creature {
         for (const key in creatureOptions) {
             this[key] = getOption(key);
         }
+        if (this.isPlayer) {
+            this.name = getName();
+        }
     }
 
     async initMesh() {
@@ -79,9 +87,23 @@ export class Creature {
         );
     }
 
+    setName(name) {
+        if (name && (name !== this.name || !this.textMesh)) {
+            this.name = name;
+            if (this.isPeer) {
+                const oldTextMesh = this.textMesh;
+                const newTextMesh = createTextMesh(this.name);
+                this.scene.add(newTextMesh);
+                this.textMesh = newTextMesh;
+                this.scene.remove(oldTextMesh);
+            }
+        }
+    }
+
     async init(scene) {
         this.scene = scene;
         await this.initMesh();
+        this.setName(this.name);
         scene.add(this.mesh);
         this.setRotation(this.rotationAngleRad);
         this.isInitialized = true;
@@ -145,6 +167,14 @@ export class Creature {
         // Handle player inputted actions
         this.handleActions(actions, camera);
 
+        // Update creature animations
+        if (this.animationMixer) {
+            this.animationMixer.update(clockDeltaSeconds);
+        }
+        if (this.updateAnimations) {
+            this.updateAnimations();
+        }
+
         // Turn bear (and camera)
         let rotationRad = 0;
         if (this.isTurningLeft) {
@@ -161,15 +191,17 @@ export class Creature {
         }
 
         // Update player velocity based on current actions
-        let movementSpeed = this.speed;
-        movementSpeed *= this.wasInWater ? SWIMMING_SPEED : 1;
-        movementSpeed *= this.isAttacking ? ATTACKING_SPEED : 1;
-        if (this.isMovingForward) {
-            this.velocity.z = movementSpeed;
-        } else if (this.isMovingBack) {
-            this.velocity.z = -movementSpeed * BACKWARDS_SPEED;
-        } else {
-            this.velocity.z = 0;
+        if (!this.isPeer) {
+            let movementSpeed = this.speed;
+            movementSpeed *= this.wasInWater ? SWIMMING_SPEED : 1;
+            movementSpeed *= this.isAttacking ? ATTACKING_SPEED : 1;
+            if (this.isMovingForward) {
+                this.velocity.z = movementSpeed;
+            } else if (this.isMovingBack) {
+                this.velocity.z = -movementSpeed * BACKWARDS_SPEED;
+            } else {
+                this.velocity.z = 0;
+            }
         }
 
         // Check if creature is in water, if so, float creature
@@ -257,12 +289,13 @@ export class Creature {
             this.position.z,
         );
 
-        // Update creature animations
-        if (this.animationMixer) {
-            this.animationMixer.update(clockDeltaSeconds);
-        }
-        if (this.updateAnimations) {
-            this.updateAnimations();
+        // Draw text mesh (if applicable)
+        if (this.textMesh) {
+            this.textMesh.position.set(
+                this.position.x,
+                this.position.y + TEXT_Y_OFFSET,
+                this.position.z,
+            );
         }
 
         // Update camera if player
@@ -279,6 +312,12 @@ export class Creature {
         this.rotationAngleRad = angleRad;
         this.rotationMatrix.makeRotation(angleRad);
         this.mesh.setRotationFromAxisAngle(new Vector3(0, 1, 0), -angleRad);
+        if (this.textMesh) {
+            this.textMesh.setRotationFromAxisAngle(
+                new Vector3(0, 1, 0),
+                -angleRad,
+            );
+        }
     }
 
     addRotation(angleRad) {

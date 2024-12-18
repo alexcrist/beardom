@@ -12,7 +12,6 @@ export class Water {
         this.yLevel = yOrigin;
         this.isWaterMatrix = this.generateWaterMatrix(xOrigin, zOrigin);
         this.mesh = this.generateWaterMesh();
-        // this.mesh = this.createDebugMesh(xOrigin, yOrigin, zOrigin);
     }
 
     getIsPointInWater(x, y, z) {
@@ -28,14 +27,6 @@ export class Water {
             return false;
         }
         return this.isWaterMatrix[xIndex][zIndex];
-    }
-
-    createDebugMesh(x, y, z) {
-        const geometry = new THREE.SphereGeometry(1, 32, 32); // Radius 1, 32 segments
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const sphere = new THREE.Mesh(geometry, material);
-        sphere.position.set(x, y, z); // x: 10, y: 5, z: -3
-        return sphere;
     }
 
     generateWaterMatrix(xOrigin, zOrigin) {
@@ -128,7 +119,7 @@ export class Water {
             "position",
             new THREE.Float32BufferAttribute(vertices, 3),
         );
-        geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2)); // Add UVs
+        geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
         geometry.setIndex(indices);
         geometry.computeVertexNormals();
 
