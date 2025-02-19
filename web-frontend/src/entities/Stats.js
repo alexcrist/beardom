@@ -30,7 +30,7 @@ export class Stats {
         if (periodDuration >= ONE_SECOND_IN_MS) {
             const memoryMB = this.memoryMBSum / this.numMeasurements;
             const ms = this.msPerFrameSum / this.numMeasurements;
-            const fps = this.numMeasurements;
+            const fps = this.numMeasurements - 1;
             store.dispatch(
                 mainSlice.actions.setPerformanceStats({ fps, ms, memoryMB }),
             );
