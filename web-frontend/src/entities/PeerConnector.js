@@ -1,7 +1,7 @@
 import { Peer } from "peerjs";
 import { Bear } from "./Bear";
 
-const SERVER_IP = "beardom.uw.r.appspot.com";
+const SERVER_IP = "server.beardom.net";
 const SERVER_PORT = 443;
 const SERVER_KEY = "beardom";
 const SENDING_INTERVAL_MS = 50;
